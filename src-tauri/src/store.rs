@@ -2,7 +2,11 @@
 //! and the history of finished sessions.
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    path::PathBuf,
+    time::{SystemTime, UNIX_EPOCH},
+};
 use tauri::{AppHandle, Manager};
 
 use crate::session::{AppState, Session};
@@ -62,10 +66,23 @@ fn path(app: &AppHandle, file: &str) -> Option<PathBuf> {
 }
 
 fn load<T: DeserializeOwned + Default>(app: &AppHandle, file: &str) -> T {
-    path(app, file)
-        .and_then(|p| fs::read_to_string(p).ok())
-        .and_then(|json| serde_json::from_str(&json).ok())
-        .unwrap_or_default()
+    let Some(path) = path(app, file) else {
+        return T::default();
+    };
+    let Ok(json) = fs::read_to_string(&path) else {
+        return T::default();
+    };
+    serde_json::from_str(&json).unwrap_or_else(|e| {
+        // Set the unreadable file aside so the next save can't destroy what's left in it.
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0);
+        let backup = path.with_extension(format!("json.corrupt-{stamp}"));
+        eprintln!("{file} is unreadable ({e}); moved to {}", backup.display());
+        let _ = fs::rename(&path, backup);
+        T::default()
+    })
 }
 
 fn save<T: Serialize>(app: &AppHandle, file: &str, value: &T) {

@@ -117,6 +117,7 @@ export function AddTask() {
         className="text-input"
         value={title}
         placeholder="Add a task"
+        maxLength={200}
         onChange={(e) => setTitle(e.target.value)}
       />
       <button type="submit" className="icon-button tonal" aria-label="Add task" disabled={!title.trim()}>

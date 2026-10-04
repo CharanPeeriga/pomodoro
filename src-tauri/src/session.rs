@@ -5,6 +5,7 @@
 use serde::{Deserialize, Serialize};
 
 pub const MINUTE_MS: u64 = 60_000;
+const MAX_TITLE_CHARS: usize = 200;
 
 type Result<T> = std::result::Result<T, String>;
 
@@ -93,7 +94,7 @@ impl Session {
     }
 
     fn push_task(&mut self, title: &str) -> Result<String> {
-        let title = title.trim();
+        let title: String = title.trim().chars().take(MAX_TITLE_CHARS).collect();
         if title.is_empty() {
             return Err("task title is empty".into());
         }
@@ -101,7 +102,7 @@ impl Session {
         let id = format!("t{}", self.next_task_seq);
         self.tasks.push(Task {
             id: id.clone(),
-            title: title.to_string(),
+            title,
             done: false,
         });
         Ok(id)
@@ -332,7 +333,7 @@ impl AppState {
     fn advance(&mut self, now: u64) -> Result<Transition> {
         match self.phase {
             Phase::Work => {
-                let focus = self.timer.duration - self.timer.remaining(now);
+                let focus = self.timer.duration.saturating_sub(self.timer.remaining(now));
                 let session = self.session_mut()?;
                 let finished = session.pomodoros.len() as u32;
                 let every = session.config.long_break_every;
@@ -393,7 +394,7 @@ impl AppState {
     pub fn end_session(&mut self, now: u64) -> Result<Session> {
         self.expect_phase(&[Phase::Picking, Phase::Work, Phase::Break])?;
         let phase = self.phase;
-        let focus = self.timer.duration - self.timer.remaining(now);
+        let focus = self.timer.duration.saturating_sub(self.timer.remaining(now));
         let session = self.session_mut()?;
         if let Some(p) = session.pomodoros.last_mut() {
             match phase {
@@ -537,6 +538,12 @@ mod tests {
         s.set_next_task(Some("t2")).unwrap();
         s.remove_task("t2").unwrap();
         assert_eq!(session(&s).next_task_id, None);
+    }
+
+    #[test]
+    fn long_titles_are_capped() {
+        let s = started(&[&"x".repeat(5000)]);
+        assert_eq!(session(&s).tasks[0].title.chars().count(), MAX_TITLE_CHARS);
     }
 
     #[test]

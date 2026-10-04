@@ -60,6 +60,21 @@ profile:
 The files aren't inside the app, so reinstalling or updating keeps your history. To reset everything,
 quit the app and delete that folder.
 
+## Security & privacy
+
+- **No network access.** The app loads only its own bundled files. A strict Content Security Policy
+  blocks remote scripts, remote requests, inline scripts, and `eval`. There are no accounts and no
+  telemetry.
+- **Small permission surface.** No file-system, shell, or HTTP plugins. The only native features are
+  the window, the tray, the global shortcut, and the app's own commands.
+- **Single instance.** Launching it again focuses the running copy, so two copies never write the same
+  data files.
+- **Data safety.** Files are written atomically. If one ever becomes unreadable, it's renamed to
+  `*.corrupt-<timestamp>` instead of overwritten.
+- **Unsigned builds.** Releases aren't code-signed or notarized, so Windows and macOS will warn on first
+  launch. Only install builds from this repo's Releases or from someone you trust. You can compare a
+  file's SHA-256 with `Get-FileHash <file>` (Windows) or `shasum -a 256 <file>` (macOS).
+
 ## Build from source
 
 Prerequisites: [Node.js](https://nodejs.org) 20+, [Rust](https://rustup.rs) (stable), and the

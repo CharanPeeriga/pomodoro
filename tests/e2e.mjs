@@ -16,6 +16,8 @@ ws.onmessage = (m) => {
   const msg = JSON.parse(m.data);
   if (msg.id && pending.has(msg.id)) { pending.get(msg.id)(msg); pending.delete(msg.id); }
   if (msg.method === "Runtime.exceptionThrown") errors.push(msg.params.exceptionDetails.exception?.description ?? msg.params.exceptionDetails.text);
+  // Browser-generated messages (e.g. CSP violations) arrive as log entries, not console calls.
+  if (msg.method === "Log.entryAdded" && msg.params.entry.level === "error") errors.push(`[${msg.params.entry.source}] ${msg.params.entry.text}`);
   if (msg.method === "Runtime.consoleAPICalled" && msg.params.type === "error")
     errors.push(msg.params.args.map((a) => a.value ?? a.description).join(" "));
 };
@@ -23,6 +25,7 @@ await new Promise((r) => (ws.onopen = r));
 const send = (method, params = {}) =>
   new Promise((res) => { const i = ++id; pending.set(i, res); ws.send(JSON.stringify({ id: i, method, params })); });
 await send("Runtime.enable");
+await send("Log.enable");
 
 async function ev(expr) {
   const r = await send("Runtime.evaluate", { expression: `(async () => { ${expr} })()`, awaitPromise: true, returnByValue: true });

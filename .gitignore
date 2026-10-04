@@ -13,3 +13,4 @@ Thumbs.db
 *.sw?
 .scratch/
 tests/shots/
+.claude/scheduled_tasks.lock

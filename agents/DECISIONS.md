@@ -59,3 +59,4 @@ Status: `CONFIRMED` (user agreed) · `PROPOSED` (agent recommendation, not yet a
 | 40 | 2026-10-04 | Chime synthesized with Web Audio (descending at work end, ascending at break end); no audio assets | DONE (agent call) |
 | 41 | 2026-10-04 | Theme presets in Settings (9: 6 user palettes + Dusk, Graphite, Plum); Forest default; picker at bottom of Settings | CONFIRMED |
 | 42 | 2026-10-04 | Themes use exact swatch colors only — no derived tones or translucent blends (exceptions: one added dark bg for Periwinkle/Playful, hover layers, overlay-opacity setting) | CONFIRMED |
+| 43 | 2026-10-04 | Security baseline: strict CSP, no fs/shell/http plugins, single instance, corrupt-file set-aside, actions pinned by SHA | CONFIRMED |

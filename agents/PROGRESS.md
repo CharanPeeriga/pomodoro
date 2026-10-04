@@ -73,3 +73,10 @@
   hotkey shown as ⌘⌥ symbols in Settings. Mac code only compiles in CI (no Mac locally).
 - `.github/workflows/build.yml`: windows-latest (nsis) + macos-latest (universal dmg) via tauri-action
   → draft release; runs `cargo test` first. README.md with install/data/build instructions.
+- **Security review (user request):** npm audit 0 vulns; cargo audit 0 vulns (2 non-applicable warnings:
+  glib — Linux-only GTK dep, proc-macro-error — build-time, unmaintained). No secrets in history, no
+  innerHTML/eval, no remote URLs. Fixes: strict CSP (verified enforced on release build: eval, remote
+  fetch/script, inline script all blocked); single-instance plugin; corrupt JSON set aside as
+  `*.corrupt-<ts>` instead of overwritten (verified); saturating focus math; 200-char task titles
+  (+ unit test, 9 total); GitHub Actions pinned to commit SHAs; e2e now captures CSP/log errors.
+  E2E 51/51 on the **release** build. Patched build reinstalled on user's PC.
