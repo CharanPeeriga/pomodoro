@@ -1,0 +1,59 @@
+# Builds the Windows installer and a universal macOS .dmg, and attaches both to a draft release.
+# Run it from the Actions tab ("Run workflow") or by pushing a tag like v0.1.0.
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-latest
+            args: --bundles nsis
+            rust-targets: ""
+          - platform: macos-latest
+            args: --target universal-apple-darwin --bundles dmg
+            rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - run: npm ci
+
+      - name: Session engine tests
+        working-directory: src-tauri
+        run: cargo test --lib
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: Pomodoro v__VERSION__
+          releaseBody: |
+            **Windows:** download `Pomodoro_*_x64-setup.exe` and run it. If SmartScreen warns, click *More info → Run anyway* (the app isn't code-signed).
+            **macOS:** download `Pomodoro_*_universal.dmg`, drag Pomodoro to Applications, then right-click it → *Open* the first time (the app isn't notarized).
+            See the README for details.
+          releaseDraft: true
+          args: ${{ matrix.args }}

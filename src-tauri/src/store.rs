@@ -11,6 +11,12 @@ const SETTINGS_FILE: &str = "settings.json";
 const STATE_FILE: &str = "current_session.json";
 const HISTORY_FILE: &str = "history.json";
 
+/// ⌘⌥P on macOS, Ctrl+Alt+P elsewhere.
+#[cfg(target_os = "macos")]
+const DEFAULT_HOTKEY: &str = "Super+Alt+P";
+#[cfg(not(target_os = "macos"))]
+const DEFAULT_HOTKEY: &str = "Ctrl+Alt+P";
+
 /// Overlay position in physical pixels (top-left of the mini pill).
 #[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Position {
@@ -41,7 +47,7 @@ impl Default for Settings {
             overlay_position: None,
             sound_enabled: true,
             overlay_opacity: 0.84,
-            hotkey: "Ctrl+Alt+P".into(),
+            hotkey: DEFAULT_HOTKEY.into(),
             last_work_minutes: 25,
             last_break_minutes: 5,
             long_break_every: 4,

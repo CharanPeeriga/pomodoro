@@ -66,6 +66,7 @@ fn apply_mode(window: &WebviewWindow, state: &OverlayState, mode: Mode) -> tauri
     if mode == Mode::Center {
         state.0.lock().unwrap().mode = Mode::Center;
         window.set_always_on_top(false)?;
+        follow_across_desktops(window, false)?;
         window.set_size(LogicalSize::new(CENTER_SIZE.0, CENTER_SIZE.1))?;
         window.center()?;
         return Ok(());
@@ -93,11 +94,22 @@ fn apply_mode(window: &WebviewWindow, state: &OverlayState, mode: Mode) -> tauri
     }
 
     window.set_always_on_top(true)?;
+    follow_across_desktops(window, true)?;
     window.set_size(size)?;
     window.set_position(PhysicalPosition::new(
         mini_pos.x + offset.0,
         mini_pos.y + offset.1,
     ))?;
+    Ok(())
+}
+
+/// On macOS, keeps the overlay on every Space (including over fullscreen apps). Windows has no
+/// equivalent concept; always-on-top already covers it there.
+fn follow_across_desktops(window: &WebviewWindow, follow: bool) -> tauri::Result<()> {
+    #[cfg(target_os = "macos")]
+    window.set_visible_on_all_workspaces(follow)?;
+    #[cfg(not(target_os = "macos"))]
+    let _ = (window, follow);
     Ok(())
 }
 

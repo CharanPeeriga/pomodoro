@@ -65,3 +65,11 @@
   Plum (#2E073F #7A1CAC #AD49E1 #EBD3F8). 9 themes total. Theme picker moved to bottom of Settings.
 - Re-verified: every theme screenshotted on setup/mini/expanded/break/summary; E2E 51/51.
 - Created private GitHub repo https://github.com/CharanPeeriga/pomodoro and pushed `main`.
+- **Distribution:** custom app icon (`app-icon.png`, cookie9 + elapsed wedge, Forest colors) → `tauri icon`.
+  NSIS per-user installer (`bundle.targets: ["nsis"]`); local build OK: `Pomodoro_0.1.0_x64-setup.exe`
+  (2.5 MB), release exe smoke-tested.
+- **macOS support:** `macOSPrivateApi` + `macos-private-api` feature (transparent window), overlay
+  `set_visible_on_all_workspaces` in mini/expanded (cfg macos), default hotkey Super+Alt+P on mac,
+  hotkey shown as ⌘⌥ symbols in Settings. Mac code only compiles in CI (no Mac locally).
+- `.github/workflows/build.yml`: windows-latest (nsis) + macos-latest (universal dmg) via tauri-action
+  → draft release; runs `cargo test` first. README.md with install/data/build instructions.

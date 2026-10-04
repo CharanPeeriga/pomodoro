@@ -49,8 +49,8 @@ Status: `CONFIRMED` (user agreed) · `PROPOSED` (agent recommendation, not yet a
 | # | Date | Decision | Status |
 |---|---|---|---|
 | 27 | 2026-10-04 | **Tauri v2 + React + TypeScript + Vite**; install Rust + MSVC Build Tools as needed | CONFIRMED |
-| 28 | 2026-10-04 | Windows only for v1 | CONFIRMED (implied by Tauri/Windows setup; revisit if needed) |
-| 29 | 2026-10-04 | Run in dev mode (`npm run tauri dev`) until v1 works; installer later | CONFIRMED |
+| 28 | 2026-10-04 | Windows + macOS (mac builds in GitHub Actions); no iOS/Android (overlay concept not possible there) | CONFIRMED |
+| 29 | 2026-10-04 | Distribution: unsigned NSIS setup.exe (per-user) + unsigned universal .dmg via draft GitHub Releases; no app stores | CONFIRMED |
 | 30 | 2026-10-04 | Rust backend owns timer/session state; timestamp-based timing | DONE |
 | 31 | 2026-10-04 | JSON persistence in app config dir (current session, history, settings) | DONE |
 | 32 | 2026-10-04 | Build/run via Windows toolchain, not WSL Linux | PROPOSED (technically required) |

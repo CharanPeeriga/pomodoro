@@ -10,6 +10,12 @@ import { THEMES } from "../theme/scheme";
 import { shapeStyle } from "../theme/shapes";
 
 const MODIFIER_KEYS = new Set(["Control", "Alt", "Shift", "Meta"]);
+const IS_MAC = navigator.userAgent.includes("Mac");
+const MAC_SYMBOLS: Record<string, string> = { Super: "⌘", Alt: "⌥", Ctrl: "⌃", Shift: "⇧" };
+
+/** "Super+Alt+P" → "⌘⌥P" on macOS; unchanged elsewhere. */
+const displayHotkey = (accelerator: string) =>
+  IS_MAC ? accelerator.split("+").map((part) => MAC_SYMBOLS[part] ?? part).join("") : accelerator;
 
 /** Turns a keydown into an accelerator like "Ctrl+Alt+P"; null until a non-modifier is pressed. */
 function acceleratorFrom(e: KeyboardEvent): string | null {
@@ -125,7 +131,7 @@ export function SettingsView({
               }
             }}
           >
-            {recording ? "Press keys…" : settings.hotkey || "Off"}
+            {recording ? "Press keys…" : settings.hotkey ? displayHotkey(settings.hotkey) : "Off"}
           </button>
         </div>
 
