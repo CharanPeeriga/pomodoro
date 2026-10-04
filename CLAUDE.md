@@ -5,5 +5,5 @@ architecture, decisions, open questions, roadmap, and progress log for this proj
 
 - Don't implement anything marked PROPOSED in `agents/DECISIONS.md` without user confirmation.
 - Append to `agents/PROGRESS.md` at the end of each working session.
-- Git is local only: no remote, no push.
+- Remote: private GitHub repo https://github.com/CharanPeeriga/pomodoro (origin/main).
 - Stack: Tauri v2 + React + TS. Run npm/cargo via the Windows toolchain (not WSL Linux). See `agents/ARCHITECTURE.md`.
