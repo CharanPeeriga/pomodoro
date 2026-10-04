@@ -38,7 +38,11 @@ Status: `CONFIRMED` (user agreed) · `PROPOSED` (agent recommendation, not yet a
 | 23 | 2026-10-04 | Overlay = **translucent dark pill** | CONFIRMED |
 | 24 | 2026-10-04 | Default position **top-right**; draggable; position remembered | CONFIRMED |
 | 25 | 2026-10-04 | No click-through | CONFIRMED |
-| 26 | 2026-10-04 | Visual style: agent designs it, user reviews ("surprise me") | CONFIRMED |
+| 26 | 2026-10-04 | Visual style: agent designs it, user reviews ("surprise me") | REVERSED by #33 |
+| 33 | 2026-10-04 | **Material 3 Expressive**, leaning HEAVILY into abstract shapes (cookie/clover/burst, shape morphing, wavy progress) | CONFIRMED |
+| 34 | 2026-10-04 | Colors generated at runtime: `SchemeExpressive`, dark, spec 2025, seed `#E8533F` (work = primary salmon, break = tertiary cyan) | PROPOSED |
+| 35 | 2026-10-04 | Font: Roboto Flex variable (bundled via @fontsource, wide `wdth` for display/timer) | PROPOSED |
+| 36 | 2026-10-04 | Mini overlay = shape that drains as time passes + task (small, top) + timer (large, below) | PROPOSED (shape is the timer's visual, not extra info) |
 
 ## Technical
 | # | Date | Decision | Status |
