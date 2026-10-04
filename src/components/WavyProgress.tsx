@@ -6,7 +6,15 @@ const WAVELENGTH = 22;
 const GAP = 6;
 
 /** M3 Expressive wavy linear progress: a flowing wave for elapsed time, flat track for the rest. */
-export function WavyProgress({ value, width }: { value: number; width: number }) {
+export function WavyProgress({
+  value,
+  width,
+  paused = false,
+}: {
+  value: number;
+  width: number;
+  paused?: boolean;
+}) {
   const clipId = `wave-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const v = Math.min(Math.max(value, 0), 1);
   const split = v * width;
@@ -21,7 +29,7 @@ export function WavyProgress({ value, width }: { value: number; width: number })
       </defs>
       <g clipPath={`url(#${clipId})`}>
         <path
-          className="wavy-progress-wave"
+          className={`wavy-progress-wave${paused ? " paused" : ""}`}
           d={wavePath(-WAVELENGTH, width + WAVELENGTH, mid)}
           style={{ "--wavelength": `${WAVELENGTH}px` } as React.CSSProperties}
         />

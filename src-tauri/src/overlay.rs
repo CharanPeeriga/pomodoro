@@ -10,9 +10,9 @@ use tauri::{
     Window,
 };
 
-use crate::store;
+use crate::{commands::SettingsState, store};
 
-const CENTER_SIZE: (f64, f64) = (480.0, 600.0);
+const CENTER_SIZE: (f64, f64) = (480.0, 640.0);
 const MINI_SIZE: (f64, f64) = (236.0, 74.0);
 const EXPANDED_SIZE: (f64, f64) = (320.0, 268.0);
 const EDGE_MARGIN: f64 = 16.0;
@@ -133,7 +133,8 @@ fn save_position_if_latest(app: &AppHandle, generation: u64) {
         }
         s.mini_pos
     };
-    let mut settings = store::load_settings(app);
+    let settings = app.state::<SettingsState>();
+    let mut settings = settings.0.lock().unwrap();
     settings.overlay_position = pos.map(|p| store::Position { x: p.x, y: p.y });
     store::save_settings(app, &settings);
 }

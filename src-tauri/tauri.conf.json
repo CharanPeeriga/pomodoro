@@ -15,7 +15,7 @@
         "label": "main",
         "title": "Pomodoro",
         "width": 480,
-        "height": 600,
+        "height": 640,
         "resizable": false,
         "decorations": false,
         "transparent": true,

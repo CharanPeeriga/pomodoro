@@ -28,3 +28,39 @@
     expanded 320×268 with wavy progress, work/break chips, next task, tonal Setup button.
   - Demo countdown in `App.tsx` is placeholder until M2 engine.
   - Note: `material-color-utilities` 0.4 has extensionless ESM imports — fine in Vite, breaks in plain Node (use tsx).
+- Commit `996aa1c`: M1 scaffold + M3 UI.
+- **Built the rest of v1 (uncommitted at time of writing):**
+  - Rust: `session.rs` (pure state machine + timer, 8 unit tests: auto-start rule, long breaks,
+    pause/extend, focus time, removal rules, end session), `commands.rs` (Tauri commands, 250ms timer
+    thread, `state-changed`/`phase-ended` events, taskbar flash), `store.rs` (settings/current
+    session/history JSON, atomic write), `hotkey.rs` (global-shortcut plugin), tray: New session /
+    Show-Hide / History / Settings / Quit (emits `navigate`).
+  - Frontend: `src/lib` (types, api, hooks, chime, stats), `src/components` (Screen + DECOR
+    compositions, TaskList, Checkbox squircle→cookie morph, Switch, Stepper, NavActions),
+    `src/views` (Setup, Picking, Overlay, Break, Summary, History, Settings, ConfirmNew).
+  - App.tsx derives window mode from phase/view; grows window before render, shrinks after.
+  - Palette switched to user's greens/slate (decision #37).
+- Verified: `cargo test` 8/8, `npm run build` clean, Setup screen screenshot. Other screens not yet
+  visually verified — needs a user run-through.
+- User feedback round: replaced native `<select>` (unstyled OS popup overflowing the overlay) with an
+  in-overlay M3 "Up next" picker; added settings icon (top-right) to the expanded overlay; added
+  "Preview in corner" to opacity setting (window goes to mini for 4s showing the real pill; click to end).
+- **Themes:** 6 presets in Settings (Forest default, Periwinkle, Midnight, Retro, Moon foam, Playful —
+  user-supplied palettes). `ThemeSpec` pins swatches to surface/primary(work)/secondary/tertiary(break)
+  roles; other roles are tones; on-colors picked by tone (>58 → dark text). `settings.theme` persisted
+  in Rust; last theme cached in localStorage to avoid a first-paint flash.
+- **E2E test** `tests/e2e.mjs` (WebView2 CDP, port 9333): 51/51 passing — setup, add/remove, pick,
+  mini/expanded sizes, pin, next picker, pause/+5/resume, end-confirm timeout, break checkbox,
+  auto-start, long break, wait-on-picking, real 60s timer expiry + focus time, tray confirm,
+  all-done banner, summary stats, history, settings (sound/opacity/hotkey re-register), corner
+  preview, every theme. Screenshots reviewed; fixed break decor overlapping settings icon,
+  picking decor crowding add button, "1 pomodoros". User app data backed up and restored around the run.
+- **Themes v2 (user: "palettes aren't exact"):** removed all derived tones. `ThemeSpec` now maps swatches
+  1:1 onto roles (bg, raised, text, work/break/tonal + containers, outline, danger). Single-dark
+  palettes outline raised items (`--md-sys-color-surface-border`) instead of filling. Periwinkle and
+  Playful have no dark swatch → each has exactly one added near-black background (commented in code).
+  Removed translucent blends from CSS/decor (solid fills; disabled = outlined; paused = accent color).
+  Only remaining blends: hover state layers and the user's overlay-opacity setting.
+- Added 3 palettes: Dusk (#2D3250 #424769 #7077A1 #F6B17A), Graphite (#222831 #393E46 #00ADB5 #EEEEEE),
+  Plum (#2E073F #7A1CAC #AD49E1 #EBD3F8). 9 themes total. Theme picker moved to bottom of Settings.
+- Re-verified: every theme screenshotted on setup/mini/expanded/break/summary; E2E 51/51.

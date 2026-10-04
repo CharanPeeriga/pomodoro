@@ -40,7 +40,8 @@ Status: `CONFIRMED` (user agreed) · `PROPOSED` (agent recommendation, not yet a
 | 25 | 2026-10-04 | No click-through | CONFIRMED |
 | 26 | 2026-10-04 | Visual style: agent designs it, user reviews ("surprise me") | REVERSED by #33 |
 | 33 | 2026-10-04 | **Material 3 Expressive**, leaning HEAVILY into abstract shapes (cookie/clover/burst, shape morphing, wavy progress) | CONFIRMED |
-| 34 | 2026-10-04 | Colors generated at runtime: `SchemeExpressive`, dark, spec 2025, seed `#E8533F` (work = primary salmon, break = tertiary cyan) | PROPOSED |
+| 34 | 2026-10-04 | ~~Tomato seed via `SchemeExpressive`~~ | REVERSED by #37 |
+| 37 | 2026-10-04 | (superseded by #42 mapping) **Palette: #9CB080 sage, #618764 green, #2B5748 deep green, #273338 slate.** Pinned roles: primary=sage (work accent), secondary=green, tertiaryContainer=deep green, surfaceContainerLow=slate (card). Other roles = tones of those palettes; break accent = tertiary tone 80 (mint). See `src/theme/scheme.ts` | CONFIRMED |
 | 35 | 2026-10-04 | Font: Roboto Flex variable (bundled via @fontsource, wide `wdth` for display/timer) | PROPOSED |
 | 36 | 2026-10-04 | Mini overlay = shape that drains as time passes + task (small, top) + timer (large, below) | PROPOSED (shape is the timer's visual, not extra info) |
 
@@ -50,6 +51,11 @@ Status: `CONFIRMED` (user agreed) · `PROPOSED` (agent recommendation, not yet a
 | 27 | 2026-10-04 | **Tauri v2 + React + TypeScript + Vite**; install Rust + MSVC Build Tools as needed | CONFIRMED |
 | 28 | 2026-10-04 | Windows only for v1 | CONFIRMED (implied by Tauri/Windows setup; revisit if needed) |
 | 29 | 2026-10-04 | Run in dev mode (`npm run tauri dev`) until v1 works; installer later | CONFIRMED |
-| 30 | 2026-10-04 | Rust backend owns timer/session state; timestamp-based timing | PROPOSED |
-| 31 | 2026-10-04 | JSON persistence in app data dir (current session, history, settings) | PROPOSED |
+| 30 | 2026-10-04 | Rust backend owns timer/session state; timestamp-based timing | DONE |
+| 31 | 2026-10-04 | JSON persistence in app config dir (current session, history, settings) | DONE |
 | 32 | 2026-10-04 | Build/run via Windows toolchain, not WSL Linux | PROPOSED (technically required) |
+| 38 | 2026-10-04 | Done tasks: any task can be checked off from pick/break lists; tasks with pomodoros can't be removed (check off instead) | DONE (agent call) |
+| 39 | 2026-10-04 | Overlay "End" needs a second click within 3s ("Confirm") | DONE (agent call) |
+| 40 | 2026-10-04 | Chime synthesized with Web Audio (descending at work end, ascending at break end); no audio assets | DONE (agent call) |
+| 41 | 2026-10-04 | Theme presets in Settings (9: 6 user palettes + Dusk, Graphite, Plum); Forest default; picker at bottom of Settings | CONFIRMED |
+| 42 | 2026-10-04 | Themes use exact swatch colors only — no derived tones or translucent blends (exceptions: one added dark bg for Periwinkle/Playful, hover layers, overlay-opacity setting) | CONFIRMED |

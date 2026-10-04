@@ -1,219 +1,122 @@
-import { useEffect, useRef, useState } from "react";
-import type { MouseEvent } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { Icon } from "./components/Icon";
-import { ShapeProgress } from "./components/ShapeProgress";
-import { WavyProgress } from "./components/WavyProgress";
-import { shapeStyle } from "./theme/shapes";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
+import { api, run } from "./lib/api";
+import { playChime } from "./lib/chime";
+import { useAppState, useSettings } from "./lib/hooks";
+import type { OverlayView, Transition, WindowMode } from "./lib/types";
+import { BreakView } from "./views/BreakView";
+import { ConfirmNewView } from "./views/ConfirmNewView";
+import { HistoryView } from "./views/HistoryView";
+import { OverlayView as Overlay, OverlayPreview } from "./views/OverlayView";
+import { PickingView } from "./views/PickingView";
+import { SettingsView } from "./views/SettingsView";
+import { SetupView } from "./views/SetupView";
+import { SummaryView } from "./views/SummaryView";
+import { applyTheme } from "./theme/scheme";
 import "./App.css";
 
-type Mode = "center" | "mini" | "expanded";
-type Phase = "work" | "break";
-
-const HOVER_EXPAND_MS = 400;
-const LEAVE_COLLAPSE_MS = 300;
-const DRAG_THRESHOLD_PX = 4;
-const EXPANDED_CONTENT_WIDTH = 284;
-
-// M1 placeholder data until the session engine (M2) exists.
-const DEMO = {
-  phase: "work" as Phase,
-  task: "Write the intro section",
-  workMinutes: 25,
-  breakMinutes: 5,
-  nextTask: "Review lecture notes",
-};
-
-/** Placeholder countdown so the overlay has motion before the real timer lands in M2. */
-function useDemoCountdown(totalSeconds: number) {
-  const [startedAt] = useState(() => Date.now());
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const id = window.setInterval(() => setNow(Date.now()), 250);
-    return () => window.clearInterval(id);
-  }, []);
-  const remaining = Math.max(totalSeconds - Math.floor((now - startedAt) / 1000), 0);
-  return { remaining, fraction: remaining / totalSeconds };
-}
-
-const formatTime = (seconds: number) =>
-  `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+const WINDOW_SIZE_RANK: Record<WindowMode, number> = { mini: 0, expanded: 1, center: 2 };
 
 export default function App() {
-  const [mode, setMode] = useState<Mode>("center");
+  const state = useAppState();
+  const [settings, setSettings] = useSettings();
+  const [view, setView] = useState<OverlayView | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [shownMode, setShownMode] = useState<WindowMode>("center");
+  const [previewing, setPreviewing] = useState(false);
+  const endPreview = useCallback(() => setPreviewing(false), []);
 
-  const changeMode = async (next: Mode) => {
-    await invoke("set_mode", { mode: next });
-    setMode(next);
-  };
+  const phase = state?.phase;
+  const overlayActive = phase === "work" && view === null;
+  const desiredMode: WindowMode = previewing
+    ? "mini"
+    : overlayActive
+      ? expanded
+        ? "expanded"
+        : "mini"
+      : "center";
+
+  // Latest values for event handlers registered once.
+  const latest = useRef({ phase, settings });
+  latest.current = { phase, settings };
 
   useEffect(() => {
-    void invoke("set_mode", { mode: "center" });
+    if (!overlayActive) setExpanded(false);
+  }, [overlayActive]);
+
+  // Resize before rendering when growing, after rendering when shrinking, so content never clips.
+  useEffect(() => {
+    if (desiredMode === shownMode) return;
+    if (WINDOW_SIZE_RANK[desiredMode] > WINDOW_SIZE_RANK[shownMode]) {
+      api.setMode(desiredMode).then(() => setShownMode(desiredMode), console.error);
+    } else {
+      setShownMode(desiredMode);
+      requestAnimationFrame(() => run(api.setMode(desiredMode)));
+    }
+  }, [desiredMode, shownMode]);
+
+  useEffect(() => {
+    if (settings) {
+      document.documentElement.style.setProperty("--overlay-opacity", String(settings.overlayOpacity));
+      applyTheme(settings.theme);
+    }
+  }, [settings]);
+
+  useEffect(() => {
+    const unlistenPhase = listen<Transition>("phase-ended", (e) => {
+      if (latest.current.settings?.soundEnabled) {
+        playChime(e.payload.kind === "workEnded" ? "down" : "up");
+      }
+    });
+    const unlistenNav = listen<string>("navigate", (e) => {
+      if (e.payload === "history" || e.payload === "settings") {
+        setView(e.payload);
+        return;
+      }
+      // "setup": start over, confirming first if a session is running.
+      const current = latest.current.phase;
+      if (current === "picking" || current === "work" || current === "break") {
+        setView("confirm-new");
+      } else {
+        setView(null);
+        if (current === "summary") run(api.newSession());
+      }
+    });
+    return () => {
+      void unlistenPhase.then((fn) => fn());
+      void unlistenNav.then((fn) => fn());
+    };
   }, []);
 
-  if (mode === "center") {
-    return <CenterView onStart={() => changeMode("mini")} />;
+  if (!state || !settings) return null;
+
+  const close = () => setView(null);
+
+  if (previewing) return shownMode === "mini" ? <OverlayPreview state={state} onDone={endPreview} /> : null;
+
+  if (view === "history") return <HistoryView onBack={close} />;
+  if (view === "settings") return (
+      <SettingsView settings={settings} onChange={setSettings} onBack={close} onPreview={() => setPreviewing(true)} />
+    );
+  if (view === "confirm-new") return <ConfirmNewView onDone={close} />;
+
+  switch (state.phase) {
+    case "setup":
+      return <SetupView settings={settings} onOpen={setView} onSettingsChange={setSettings} />;
+    case "picking":
+      return <PickingView session={state.session!} onOpen={setView} />;
+    case "work":
+      return (
+        <Overlay
+          state={state}
+          expanded={shownMode === "expanded"}
+          onExpandedChange={setExpanded}
+          onOpenSettings={() => setView("settings")}
+        />
+      );
+    case "break":
+      return <BreakView state={state} onOpen={setView} />;
+    case "summary":
+      return <SummaryView session={state.session!} onOpen={setView} />;
   }
-  return <Overlay mode={mode} onModeChange={changeMode} />;
-}
-
-function CenterView({ onStart }: { onStart: () => void }) {
-  return (
-    <main className="card" data-phase="work">
-      <div className="decor" aria-hidden>
-        <svg className="decor-shape decor-clover" viewBox="0 0 100 100">
-          <path className="spin-slow" style={shapeStyle("clover")} />
-        </svg>
-        <svg className="decor-shape decor-burst" viewBox="0 0 100 100">
-          <path className="spin-reverse" style={shapeStyle("burst")} />
-        </svg>
-        <svg className="decor-shape decor-cookie" viewBox="0 0 100 100">
-          <path className="spin" style={shapeStyle("cookie7")} />
-        </svg>
-      </div>
-
-      <header className="card-header" data-tauri-drag-region>
-        <span className="overline" data-tauri-drag-region>
-          Mini pomodoro
-        </span>
-      </header>
-
-      <section className="card-body">
-        <h1 className="display">
-          Focus,
-          <br />
-          in shape.
-        </h1>
-        <p className="body-large muted">
-          Overlay prototype. The setup flow for tasks and intervals lands in M3.
-        </p>
-        <button className="m3-button filled large" onClick={onStart}>
-          <Icon name="northEast" />
-          Send to corner
-        </button>
-      </section>
-    </main>
-  );
-}
-
-function Overlay({
-  mode,
-  onModeChange,
-}: {
-  mode: Exclude<Mode, "center">;
-  onModeChange: (mode: Mode) => Promise<void>;
-}) {
-  const [pinned, setPinned] = useState(false);
-  const hoverTimer = useRef<number | undefined>(undefined);
-  const leaveTimer = useRef<number | undefined>(undefined);
-  const pressStart = useRef<{ x: number; y: number } | null>(null);
-  const { remaining, fraction } = useDemoCountdown(DEMO.workMinutes * 60);
-
-  const clearTimers = () => {
-    window.clearTimeout(hoverTimer.current);
-    window.clearTimeout(leaveTimer.current);
-  };
-
-  useEffect(() => clearTimers, []);
-
-  const collapse = () => {
-    setPinned(false);
-    void onModeChange("mini");
-  };
-
-  const handleEnter = () => {
-    window.clearTimeout(leaveTimer.current);
-    if (mode === "mini") {
-      hoverTimer.current = window.setTimeout(() => onModeChange("expanded"), HOVER_EXPAND_MS);
-    }
-  };
-
-  const handleLeave = () => {
-    window.clearTimeout(hoverTimer.current);
-    if (mode === "expanded" && !pinned) {
-      leaveTimer.current = window.setTimeout(collapse, LEAVE_COLLAPSE_MS);
-    }
-  };
-
-  const handleMouseDown = (e: MouseEvent) => {
-    if (e.button !== 0 || (e.target as HTMLElement).closest("button")) return;
-    pressStart.current = { x: e.screenX, y: e.screenY };
-  };
-
-  // Drag once the pointer moves past a small threshold; otherwise the press is a click.
-  const handleMouseMove = (e: MouseEvent) => {
-    const start = pressStart.current;
-    if (!start) return;
-    if (Math.hypot(e.screenX - start.x, e.screenY - start.y) > DRAG_THRESHOLD_PX) {
-      pressStart.current = null;
-      clearTimers();
-      void getCurrentWindow().startDragging();
-    }
-  };
-
-  const handleMouseUp = () => {
-    if (!pressStart.current) return;
-    pressStart.current = null;
-    clearTimers();
-    if (mode === "mini") {
-      setPinned(true);
-      void onModeChange("expanded");
-    } else if (pinned) {
-      collapse();
-    } else {
-      setPinned(true);
-    }
-  };
-
-  const expanded = mode === "expanded";
-
-  return (
-    <div
-      className={`overlay overlay-${mode}${pinned ? " pinned" : ""}`}
-      data-phase={DEMO.phase}
-      onMouseEnter={handleEnter}
-      onMouseLeave={handleLeave}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-    >
-      <div className="overlay-main">
-        <ShapeProgress shape={pinned ? "flower" : expanded ? "cookie12" : "cookie9"} remaining={fraction} />
-        <div className="overlay-text">
-          <span className="current-task" title={DEMO.task}>
-            {DEMO.task}
-          </span>
-          <span className="timer">{formatTime(remaining)}</span>
-        </div>
-      </div>
-
-      {expanded && (
-        <div className="overlay-details">
-          <WavyProgress value={1 - fraction} width={EXPANDED_CONTENT_WIDTH} />
-          <div className="chips">
-            <span className="chip">
-              <span className="chip-dot work" />
-              Work {DEMO.workMinutes}m
-            </span>
-            <span className="chip">
-              <span className="chip-dot break" />
-              Break {DEMO.breakMinutes}m
-            </span>
-          </div>
-          <div className="next-task">
-            <Icon name="arrowForward" size={16} />
-            <span className="label muted">Next</span>
-            <span className="truncate">{DEMO.nextTask}</span>
-          </div>
-          <div className="controls">
-            <button className="m3-button tonal" onClick={() => onModeChange("center")}>
-              <Icon name="tune" size={16} />
-              Setup
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
 }
