@@ -16,4 +16,4 @@ Any agent picking up work on this repo should read these files first, in this or
 - **Don't implement anything marked `PROPOSED` without the user confirming it.**
 - Keep these docs short and current. Prefer editing over appending (except `PROGRESS.md`).
 - Dates are absolute (YYYY-MM-DD).
-- Remote: private repo https://github.com/CharanPeeriga/pomodoro (`origin`). Push only when the user asks.
+- Remote: public repo https://github.com/CharanPeeriga/pomodoro (`origin`). Push only when the user asks. Commit with the GitHub no-reply email (repo-local git config), never a personal address.

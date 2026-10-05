@@ -80,3 +80,4 @@
   `*.corrupt-<ts>` instead of overwritten (verified); saturating focus math; 200-char task titles
   (+ unit test, 9 total); GitHub Actions pinned to commit SHAs; e2e now captures CSP/log errors.
   E2E 51/51 on the **release** build. Patched build reinstalled on user's PC.
+- Repo made **public** (user request). Before that: rewrote all commits to the GitHub no-reply email (metadata + one PROGRESS.md line), force-pushed, deleted the stale draft release and old workflow run. Commit hashes mentioned earlier in this log predate the rewrite.

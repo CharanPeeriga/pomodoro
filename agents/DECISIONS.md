@@ -5,7 +5,7 @@ Status: `CONFIRMED` (user agreed) · `PROPOSED` (agent recommendation, not yet a
 ## Process
 | # | Date | Decision | Status |
 |---|---|---|---|
-| 1 | 2026-10-04 | App lives in this repo; private GitHub remote CharanPeeriga/pomodoro (added 2026-10-04 on request) | CONFIRMED |
+| 1 | 2026-10-04 | App lives in this repo; GitHub remote CharanPeeriga/pomodoro, public since 2026-10-04 | CONFIRMED |
 | 2 | 2026-10-04 | No implementation until scope is agreed | CONFIRMED |
 | 3 | 2026-10-04 | Context tracked in `agents/` folder | CONFIRMED |
 
